@@ -10,22 +10,22 @@ import javax.annotation.PostConstruct;
 @Service
 public class LdapManagerService {
 
-    @Value("${adresse.ip}")
+    @Value("${adresse_ip}")
     private String adresseIP;
 
-    @Value("${admin.login}")
+    @Value("${admin_login}")
     private String adminLogin;
 
-    @Value("${admin.password}")
+    @Value("${admin_password}")
     private String adminPassword;
 
-    @Value("${base.dn}")
+    @Value("${base_dn}")
     private String baseDN;
 
-    @Value("${ou.utilisateurs}")
+    @Value("${ou_utilisateurs}")
     private String ouUtilisateurs;
 
-    @Value("${ou.groups}")
+    @Value("${ou_groups}")
     private String ouGroups;
 
     private LdapManager manager;

@@ -50,7 +50,7 @@ public class UsersController
                                                  @Valid @RequestBody UserLdap usersDetails) {
 
         try {
-            ldapManagerService.getManager().modifyUser(login, usersDetails);
+            ldapManagerService.getManager().updateUser(login, usersDetails);
             return usersDetails;
         } catch (Exception ex) {
             throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
