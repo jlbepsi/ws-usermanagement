@@ -7,6 +7,9 @@
     <facet type="web" name="Web">
       <configuration>
         <webroots />
+        <sourceRoots>
+          <root url="file://$MODULE_DIR$/../../src/main/java" />
+        </sourceRoots>
       </configuration>
     </facet>
   </component>
@@ -15,6 +18,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../src/main">
       <sourceFolder url="file://$MODULE_DIR$/../../src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/main/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -29,11 +33,11 @@
     </orderEntry>
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-web:2.0.4.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:2.0.4.RELEASE" level="project" />
-    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-api:0.10.1" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-api:0.10.5" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-json:2.0.4.RELEASE" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-impl:0.10.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter:2.0.4.RELEASE" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-jackson:0.10.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-impl:0.10.5" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-jackson:0.10.5" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.0.4.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.hibernate.validator:hibernate-validator:6.0.11.Final" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-webmvc:5.0.8.RELEASE" level="project" />

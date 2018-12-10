@@ -59,16 +59,21 @@ public class UsersController
 
 
     // Add a UserLdap
-    @Secured( {"ROLE_SUPER_ADMIN"} )
+    //@Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users")
-    public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdap usersDetails) {
+    public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdap2 usersDetails) {
 
-        try {
+        UserLdap user = ldapManagerService.getManager().getUser(usersDetails.getLogin());
+        if (user == null)
+            throw new ResourceNotFoundException("UserLdaps", "id", usersDetails.getLogin());
+
+        return user;
+        /*try {
             ldapManagerService.getManager().addUser(usersDetails);
             return usersDetails;
         } catch (Exception ex) {
             throw new ResourceNotFoundException("addUserLdap", "usersDetails", "");
-        }
+        }*/
     }
 
     // Delete a UserLdap

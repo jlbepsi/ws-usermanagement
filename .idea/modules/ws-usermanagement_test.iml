@@ -31,11 +31,11 @@
     </orderEntry>
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-web:2.0.4.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:2.0.4.RELEASE" level="project" />
-    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-api:0.10.1" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-api:0.10.5" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-test:2.0.4.RELEASE" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-impl:0.10.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-impl:0.10.5" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.security:spring-security-test:5.0.7.RELEASE" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-jackson:0.10.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.jsonwebtoken:jjwt-jackson:0.10.5" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-json:2.0.4.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter:2.0.4.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.0.4.RELEASE" level="project" />

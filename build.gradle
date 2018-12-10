@@ -27,13 +27,13 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile('org.springframework.boot:spring-boot-starter-security')
 
-    compile ('io.jsonwebtoken:jjwt-api:0.10.1')
+    compile ('io.jsonwebtoken:jjwt-api:0.10.5')
 
     //compile files('libs/LdapManagement.jar')
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
-    runtime ('io.jsonwebtoken:jjwt-impl:0.10.2',
-            'io.jsonwebtoken:jjwt-jackson:0.10.2')
+    runtime ('io.jsonwebtoken:jjwt-impl:0.10.5',
+            'io.jsonwebtoken:jjwt-jackson:0.10.5')
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('org.springframework.security:spring-security-test')
