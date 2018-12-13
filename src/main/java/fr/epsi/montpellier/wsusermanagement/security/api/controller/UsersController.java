@@ -1,6 +1,7 @@
 package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 
 
+import fr.epsi.montpellier.wsusermanagement.security.model.UserLdapDTO;
 import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,7 @@ public class UsersController
     @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/{login}")
     public @ResponseBody UserLdap updateUserLdap(@PathVariable(value = "login") String login,
-                                                 @Valid @RequestBody UserLdap usersDetails) {
+                                                 @Valid @RequestBody UserLdapDTO usersDetails) {
 
         try {
             ldapManagerService.getManager().updateUser(login, usersDetails);
@@ -59,21 +60,16 @@ public class UsersController
 
 
     // Add a UserLdap
-    //@Secured( {"ROLE_SUPER_ADMIN"} )
+    @Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users")
-    public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdap2 usersDetails) {
+    public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdapDTO usersDetails) {
 
-        UserLdap user = ldapManagerService.getManager().getUser(usersDetails.getLogin());
-        if (user == null)
-            throw new ResourceNotFoundException("UserLdaps", "id", usersDetails.getLogin());
-
-        return user;
-        /*try {
+        try {
             ldapManagerService.getManager().addUser(usersDetails);
             return usersDetails;
         } catch (Exception ex) {
             throw new ResourceNotFoundException("addUserLdap", "usersDetails", "");
-        }*/
+        }
     }
 
     // Delete a UserLdap
