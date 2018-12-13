@@ -1,11 +1,12 @@
 package fr.epsi.montpellier.wsusermanagement.security.service;
 
-import fr.epsi.montpellier.Ldap.LdapManager;
-import fr.epsi.montpellier.wsusermanagement.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+
+import fr.epsi.montpellier.Ldap.LdapManager;
+import fr.epsi.montpellier.wsusermanagement.ResourceNotFoundException;
 
 @Service
 public class LdapManagerService {

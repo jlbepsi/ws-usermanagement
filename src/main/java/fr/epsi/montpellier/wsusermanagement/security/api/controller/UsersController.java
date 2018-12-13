@@ -1,8 +1,6 @@
 package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 
 
-import fr.epsi.montpellier.wsusermanagement.security.model.UserLdapDTO;
-import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -11,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import fr.epsi.montpellier.Ldap.UserLdap;
 import fr.epsi.montpellier.wsusermanagement.ResourceNotFoundException;
+import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
 
 
 @RestController
@@ -48,7 +47,7 @@ public class UsersController
     @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/{login}")
     public @ResponseBody UserLdap updateUserLdap(@PathVariable(value = "login") String login,
-                                                 @Valid @RequestBody UserLdapDTO usersDetails) {
+                                                 @Valid @RequestBody UserLdap usersDetails) {
 
         try {
             ldapManagerService.getManager().updateUser(login, usersDetails);
@@ -62,7 +61,7 @@ public class UsersController
     // Add a UserLdap
     @Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users")
-    public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdapDTO usersDetails) {
+    public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdap usersDetails) {
 
         try {
             ldapManagerService.getManager().addUser(usersDetails);

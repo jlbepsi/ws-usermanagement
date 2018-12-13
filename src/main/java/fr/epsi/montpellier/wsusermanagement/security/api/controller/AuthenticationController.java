@@ -1,8 +1,6 @@
 package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 
 
-import fr.epsi.montpellier.wsusermanagement.security.model.AuthenticationResponse;
-import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +9,10 @@ import javax.validation.Valid;
 
 import fr.epsi.montpellier.wsusermanagement.security.model.AuthenticationRequest;
 import fr.epsi.montpellier.wsusermanagement.security.service.JwtTokenService;
+import fr.epsi.montpellier.wsusermanagement.security.model.AuthenticationResponse;
+import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
+
 import fr.epsi.montpellier.Ldap.UserLdap;
-
-
 
 @RestController
 @RequestMapping("/api/auth")

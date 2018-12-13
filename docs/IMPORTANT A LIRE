@@ -1,0 +1,4 @@
+Lorsque le service est déployé,sur debian, il faut relancer les services:
+
+systemctl daemon-reload
+systemctl restart ws-usermanagement
