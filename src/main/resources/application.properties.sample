@@ -1,7 +1,8 @@
 server.port=8081
 
 jwt.expire.hours=2
-jwt.token.secret=<la phrase secrete>
+jwt.token.private_key=keys/private_key.der
+jwt.token.public_key=keys/public_key.der
 
 adresse_ip=<adresse IP du serveur LDAP>
 admin_login=<le login admin>

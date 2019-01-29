@@ -29,8 +29,8 @@ dependencies {
 
     compile ('io.jsonwebtoken:jjwt-api:0.10.5')
 
-    //compile files('libs/LdapManagement.jar')
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile files('libs/LdapManagement.jar')
+    //compile fileTree(include: ['*.jar'], dir: 'libs')
 
     runtime ('io.jsonwebtoken:jjwt-impl:0.10.5',
             'io.jsonwebtoken:jjwt-jackson:0.10.5')
