@@ -22,7 +22,7 @@ import fr.epsi.montpellier.Ldap.UserLdap;
 
 /*
 
-Génération de clé (extrait de http://codeartisan.blogspot.com/2009/05/public-key-cryptography-in-java.html)
+Génération des clés (extrait de http://codeartisan.blogspot.com/2009/05/public-key-cryptography-in-java.html)
 
     Dans le terminal du dossier src/main/resources/keys, il faut créer les clés publique et privée:
 
@@ -34,6 +34,9 @@ Génération de clé (extrait de http://codeartisan.blogspot.com/2009/05/public-
 
     # output public key portion in DER format (so Java can read it)
     $ openssl rsa -in private_key.pem -pubout -outform DER -out public_key.der
+
+    # Génération de la clé pour PHP
+    openssl rsa -pubout -in private_key.pem -out public_key.pem
 
  */
 
@@ -83,6 +86,9 @@ public class JwtTokenService {
         claims.put("mail", user.getMail());
         claims.put("classe", user.getClasse());
         claims.put("roles", String.join(",", user.getRole()));
+        claims.put("bts", user.isBts());
+        claims.put("btsparcours", user.getBtsParcours());
+        claims.put("btsnumero", user.getBtsNumero());
     }
 
     private Key getPrivateKey() {
@@ -128,7 +134,7 @@ public class JwtTokenService {
             ClassPathResource resource = new ClassPathResource(ressourceName);
             return Files.readAllBytes(Paths.get(resource.getURI()));
         } catch (Exception ex) {
-
+            // Do nothing
         }
 
         return null;

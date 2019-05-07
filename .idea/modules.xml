@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ws-usermanagement.iml" filepath="$PROJECT_DIR$/ws-usermanagement.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ws-usermanagement.iml" filepath="$PROJECT_DIR$/ws-usermanagement.iml" group="ws-usermanagement" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ws-usermanagement_main.iml" filepath="$PROJECT_DIR$/.idea/modules/ws-usermanagement_main.iml" group="ws-usermanagement" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ws-usermanagement_test.iml" filepath="$PROJECT_DIR$/.idea/modules/ws-usermanagement_test.iml" group="ws-usermanagement" />
     </modules>

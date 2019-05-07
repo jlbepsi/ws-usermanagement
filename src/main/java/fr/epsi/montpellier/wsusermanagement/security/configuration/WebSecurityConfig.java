@@ -31,8 +31,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/auth/**").permitAll()
+                .antMatchers(HttpMethod.OPTIONS, "/api/users/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/users/**").permitAll()
-                .anyRequest().authenticated();
+                  /* TODO: Activer l'authentification  .anyRequest().authenticated();*/
+                .antMatchers(HttpMethod.POST, "/api/users/**").permitAll()
+                .antMatchers(HttpMethod.PUT, "/api/users/**").permitAll()
+                .antMatchers(HttpMethod.DELETE, "/api/users/**").permitAll();
 
         http
                 .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
