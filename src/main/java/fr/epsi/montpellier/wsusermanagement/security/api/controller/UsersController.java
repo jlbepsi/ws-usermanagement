@@ -2,7 +2,6 @@ package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
@@ -62,6 +61,7 @@ public class UsersController
             URI location = ServletUriComponentsBuilder.fromCurrentRequest().path(
                     "/{id}").buildAndExpand(userDetails.getLogin()).toUri();
 
+            // HTTP Status Code 201: Created
             return ResponseEntity.created(location).build();
             //return userDetails;
         } catch (Exception ex) {
@@ -77,17 +77,18 @@ public class UsersController
 
         try {
             ldapManagerService.getManager().updateUser(login, usersDetails);
+            // HTTP Status Code 200: Ok
             return usersDetails;
         } catch (Exception ex) {
             throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
         }
     }
 
-    // Import a UserLdap
+    // Import many UserLdap
     //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users/imports")
     public @ResponseBody
-    List<UserImportReport> importUserLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
+    List<UserImportReport> importUsersLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
 
         List<UserImportReport> resultats = new ArrayList<>();
 
@@ -109,6 +110,7 @@ public class UsersController
             }
         }
 
+        // HTTP Status Code 200: Ok
         return resultats;
     }
 
@@ -119,6 +121,7 @@ public class UsersController
 
         try {
             ldapManagerService.getManager().deactivateUser(login);
+            // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
             return ResponseEntity.notFound().build();
@@ -132,6 +135,8 @@ public class UsersController
 
         try {
             ldapManagerService.getManager().activateUser(login);
+
+            // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
             return ResponseEntity.notFound().build();
@@ -145,10 +150,38 @@ public class UsersController
 
         try {
             ldapManagerService.getManager().deleteUser(login);
-            return ResponseEntity.ok().build();
+            // HTTP Status Code 204: No Content
+            return ResponseEntity.noContent().build();
         } catch (Exception ex) {
             return ResponseEntity.notFound().build();
             //throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
         }
+    }
+
+    // Delete many UserLdap
+    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
+    @DeleteMapping("/users/list")
+    public @ResponseBody
+    List<UserImportReport> deleteUsersLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
+
+        List<UserImportReport> resultats = new ArrayList<>();
+
+        for (UserLdap userImport : usersDetails) {
+            // Recherche de l'utilisateur
+            UserLdap user = ldapManagerService.getManager().getUser(userImport.getLogin());
+            try {
+                if (user == null) {
+                    resultats.add(new UserImportReport(userImport.getLogin(), 1, "Non trouvé"));
+                } else {
+                    // Suppression
+                    ldapManagerService.getManager().deleteUser(userImport.getLogin());
+                    resultats.add(new UserImportReport(userImport.getLogin(), 2, "Supprimé"));
+                }
+            } catch (Exception ex) {
+                resultats.add(new UserImportReport(userImport.getLogin(), -1, "Erreur: " + ex.getMessage()));
+            }
+        }
+
+        return resultats;
     }
 }
