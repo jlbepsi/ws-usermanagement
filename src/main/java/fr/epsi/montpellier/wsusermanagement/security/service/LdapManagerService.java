@@ -29,6 +29,9 @@ public class LdapManagerService {
     @Value("${ou_groups}")
     private String ouGroups;
 
+    @Value("${users_ldap_directory}")
+    private String usersLdapDirectory;
+
     private LdapManager manager;
 
     public LdapManagerService() {
@@ -42,6 +45,8 @@ public class LdapManagerService {
     private void buildManager() {
         try {
             manager = new LdapManager(adresseIP, adminLogin, adminPassword, baseDN, ouUtilisateurs, ouGroups);
+            if (usersLdapDirectory != null)
+                manager.setUsersLdapDirectory(usersLdapDirectory);
         } catch (Exception ex) {
             throw new ResourceNotFoundException("LdapManager", "config file", "");
         }

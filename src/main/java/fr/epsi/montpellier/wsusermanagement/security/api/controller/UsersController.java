@@ -84,6 +84,22 @@ public class UsersController
         }
     }
 
+    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @PutMapping("/users/password/{login}")
+    public @ResponseBody UserLdap updateUserPasswordLdap(@PathVariable(value = "login") String login,
+                                                 @Valid @RequestBody UserLdap usersDetails) {
+
+        try {
+            ldapManagerService.getManager().updateUserPassword(login, usersDetails.getMotDePasse());
+            // HTTP Status Code 200: Ok
+            return usersDetails;
+        } catch (Exception ex) {
+            throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
+        }
+    }
+
+
+
     // Import many UserLdap
     //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users/imports")
@@ -114,7 +130,16 @@ public class UsersController
         return resultats;
     }
 
-    // deactive a UserLdap
+    // deactive a list of login
+    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @PutMapping("/users/deactivatelist")
+    public @ResponseBody
+    List<UserImportReport> deactivateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
+
+        // HTTP Status Code 200: Ok
+        return internalActivateUsersLdap(usersLogin, false);
+    }
+
     //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/deactivate/{login}")
     public ResponseEntity<Void>  deactivateUserLdap(@PathVariable(value = "login") String login) {
@@ -142,6 +167,15 @@ public class UsersController
             return ResponseEntity.notFound().build();
         }
     }
+    // deactive a list of login
+    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @PutMapping("/users/activatelist")
+    public @ResponseBody
+    List<UserImportReport> activateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
+
+        // HTTP Status Code 200: Ok
+        return internalActivateUsersLdap(usersLogin, true);
+    }
 
     // Delete a UserLdap
     //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
@@ -162,23 +196,61 @@ public class UsersController
     //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
     @DeleteMapping("/users/list")
     public @ResponseBody
-    List<UserImportReport> deleteUsersLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
+    List<UserImportReport> deleteUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
         List<UserImportReport> resultats = new ArrayList<>();
 
-        for (UserLdap userImport : usersDetails) {
+        for (String login : usersLogin) {
             // Recherche de l'utilisateur
-            UserLdap user = ldapManagerService.getManager().getUser(userImport.getLogin());
+            UserLdap user = ldapManagerService.getManager().getUser(login);
             try {
                 if (user == null) {
-                    resultats.add(new UserImportReport(userImport.getLogin(), 1, "Non trouvé"));
+                    resultats.add(new UserImportReport(login, 1, "Non trouvé"));
                 } else {
-                    // Suppression
-                    ldapManagerService.getManager().deleteUser(userImport.getLogin());
-                    resultats.add(new UserImportReport(userImport.getLogin(), 2, "Supprimé"));
+                    ldapManagerService.getManager().deleteUser(login);
+                    resultats.add(new UserImportReport(login, 2, "Supprimé"));
                 }
             } catch (Exception ex) {
-                resultats.add(new UserImportReport(userImport.getLogin(), -1, "Erreur: " + ex.getMessage()));
+                resultats.add(new UserImportReport(login, -1, "Erreur: " + ex.getMessage()));
+            }
+        }
+
+        return resultats;
+    }
+
+    // Bascule tous les utilisateurs dans la classe NA
+    @PutMapping("/users/setuserstona")
+    public ResponseEntity<Void>  setUsersToNA() {
+
+        try {
+            ldapManagerService.getManager().setUsersToNA();
+
+            // HTTP Status Code 200: Ok
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            throw new ResourceNotFoundException("updateUserLdap", "setUsersToNA", "");
+        }
+    }
+
+    private List<UserImportReport> internalActivateUsersLdap(List<String> usersLogin, boolean active) {
+
+        List<UserImportReport> resultats = new ArrayList<>();
+
+        for (String login : usersLogin) {
+            // Recherche de l'utilisateur
+            UserLdap user = ldapManagerService.getManager().getUser(login);
+            try {
+                if (user != null) {
+                    if (active) {
+                        ldapManagerService.getManager().activateUser(login);
+                        resultats.add(new UserImportReport(login, 1, "Utilisateur activé"));
+                    } else {
+                        ldapManagerService.getManager().deactivateUser(login);
+                        resultats.add(new UserImportReport(login, 1, "Utilisateur désactivé"));
+                    }
+                }
+            } catch (Exception ex) {
+                resultats.add(new UserImportReport(login, -1, "Erreur: " + ex.getMessage()));
             }
         }
 
