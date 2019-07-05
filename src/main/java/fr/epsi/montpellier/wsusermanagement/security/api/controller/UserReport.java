@@ -1,11 +1,11 @@
 package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 
-public class UserImportReport {
+public class UserReport {
     private String login;
     private int status;
     private String message;
 
-    public UserImportReport(String login, int status, String message) {
+    public UserReport(String login, int status, String message) {
         this.login = login;
         this.status = status;
         this.message = message;

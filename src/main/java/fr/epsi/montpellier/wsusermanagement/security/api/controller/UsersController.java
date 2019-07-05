@@ -49,7 +49,7 @@ public class UsersController
     }
 
     // Add a UserLdap
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
+    @Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users")
     //@ResponseStatus(HttpStatus.CREATED)
     //public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdap userDetails) {
@@ -70,7 +70,7 @@ public class UsersController
     }
 
     // Update a UserLdap
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/{login}")
     public @ResponseBody UserLdap updateUserLdap(@PathVariable(value = "login") String login,
                                                  @Valid @RequestBody UserLdap usersDetails) {
@@ -84,7 +84,7 @@ public class UsersController
         }
     }
 
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/password/{login}")
     public @ResponseBody UserLdap updateUserPasswordLdap(@PathVariable(value = "login") String login,
                                                  @Valid @RequestBody UserLdap usersDetails) {
@@ -101,28 +101,40 @@ public class UsersController
 
 
     // Import many UserLdap
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
+    @Secured( {"ROLE_SUPER_ADMIN"} )
     @PostMapping("/users/imports")
     public @ResponseBody
-    List<UserImportReport> importUsersLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
+    List<UserReport> importUsersLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
 
-        List<UserImportReport> resultats = new ArrayList<>();
+        List<UserReport> resultats = new ArrayList<>();
 
         for (UserLdap userImport : usersDetails) {
             // Recherche de l'utilisateur
             UserLdap user = ldapManagerService.getManager().getUser(userImport.getLogin());
             try {
+                // Fixe le BTS
+                // Par défaut, les utilisateurs B1 et B2 font le BTS, option SLAM
+                if (userImport.getClasse().equalsIgnoreCase("B1") || userImport.getClasse().equalsIgnoreCase("B2")) {
+                    // Si l'option BTS n'est pas activé ...
+                    if (! userImport.isBts()) {
+                        // ... on la fixe à l'option SLAM
+                        userImport.setBts(true);
+                        userImport.setBtsParcours("SLAM");
+                        userImport.setBtsNumero("0");
+                    }
+                }
+
                 if (user == null) {
                     // Ajout
                     ldapManagerService.getManager().addUser(userImport);
-                    resultats.add(new UserImportReport(userImport.getLogin(), 1, "Créé"));
+                    resultats.add(new UserReport(userImport.getLogin(), 1, "Créé"));
                 } else {
                     // Modification
                     ldapManagerService.getManager().updateUser(userImport.getLogin(), userImport);
-                    resultats.add(new UserImportReport(userImport.getLogin(), 2, "Mis à jour"));
+                    resultats.add(new UserReport(userImport.getLogin(), 2, "Mis à jour"));
                 }
             } catch (Exception ex) {
-                resultats.add(new UserImportReport(userImport.getLogin(), -1, "Erreur: " + ex.getMessage()));
+                resultats.add(new UserReport(userImport.getLogin(), -1, "Erreur: " + ex.getMessage()));
             }
         }
 
@@ -131,16 +143,16 @@ public class UsersController
     }
 
     // deactive a list of login
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/deactivatelist")
     public @ResponseBody
-    List<UserImportReport> deactivateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
+    List<UserReport> deactivateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
         // HTTP Status Code 200: Ok
         return internalActivateUsersLdap(usersLogin, false);
     }
 
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/deactivate/{login}")
     public ResponseEntity<Void>  deactivateUserLdap(@PathVariable(value = "login") String login) {
 
@@ -154,7 +166,7 @@ public class UsersController
     }
 
     // active a UserLdap
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/activate/{login}")
     public ResponseEntity<Void>  activateUserLdap(@PathVariable(value = "login") String login) {
 
@@ -167,18 +179,49 @@ public class UsersController
             return ResponseEntity.notFound().build();
         }
     }
+
     // deactive a list of login
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"})
+    @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping("/users/activatelist")
     public @ResponseBody
-    List<UserImportReport> activateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
+    List<UserReport> activateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
         // HTTP Status Code 200: Ok
         return internalActivateUsersLdap(usersLogin, true);
     }
 
+    // deactive a list of login
+    @Secured( {"ROLE_SUPER_ADMIN"})
+    @PutMapping("/users/changebts")
+    public @ResponseBody
+    List<UserReport> changeBtsUsersLDAP(@Valid @RequestBody OptionsChangeBTS optionsChangeBTS) {
+
+        List<UserReport> resultats = new ArrayList<>();
+
+        for (String login : optionsChangeBTS.getLogins()) {
+            // Recherche de l'utilisateur
+            UserLdap user = ldapManagerService.getManager().getUser(login);
+            try {
+                if (user == null) {
+                    resultats.add(new UserReport(login, -2, "Non trouvé"));
+                } else {
+                    user.setBts(optionsChangeBTS.isBts());
+                    user.setBtsParcours(optionsChangeBTS.getBtsparcours());
+                    user.setBtsNumero("0");
+                    ldapManagerService.getManager().updateUser(user.getLogin(), user);
+
+                    resultats.add(new UserReport(login, 1, "Mise à jour"));
+                }
+            } catch (Exception ex) {
+                resultats.add(new UserReport(login, -1, "Erreur: " + ex.getMessage()));
+            }
+        }
+
+        return resultats;
+    }
+
     // Delete a UserLdap
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
+    @Secured( {"ROLE_SUPER_ADMIN"} )
     @DeleteMapping("/users/{login}")
     public ResponseEntity<Void> deleteUserLdap(@PathVariable(value = "login") String login) {
 
@@ -193,25 +236,25 @@ public class UsersController
     }
 
     // Delete many UserLdap
-    //TODO : Réactiver autorisation @Secured( {"ROLE_SUPER_ADMIN"} )
+    @Secured( {"ROLE_SUPER_ADMIN"} )
     @DeleteMapping("/users/list")
     public @ResponseBody
-    List<UserImportReport> deleteUsersLdap(@Valid @RequestBody List<String> usersLogin) {
+    List<UserReport> deleteUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
-        List<UserImportReport> resultats = new ArrayList<>();
+        List<UserReport> resultats = new ArrayList<>();
 
         for (String login : usersLogin) {
             // Recherche de l'utilisateur
             UserLdap user = ldapManagerService.getManager().getUser(login);
             try {
                 if (user == null) {
-                    resultats.add(new UserImportReport(login, 1, "Non trouvé"));
+                    resultats.add(new UserReport(login, -2, "Non trouvé"));
                 } else {
                     ldapManagerService.getManager().deleteUser(login);
-                    resultats.add(new UserImportReport(login, 2, "Supprimé"));
+                    resultats.add(new UserReport(login, 1, "Supprimé"));
                 }
             } catch (Exception ex) {
-                resultats.add(new UserImportReport(login, -1, "Erreur: " + ex.getMessage()));
+                resultats.add(new UserReport(login, -1, "Erreur: " + ex.getMessage()));
             }
         }
 
@@ -232,9 +275,9 @@ public class UsersController
         }
     }
 
-    private List<UserImportReport> internalActivateUsersLdap(List<String> usersLogin, boolean active) {
+    private List<UserReport> internalActivateUsersLdap(List<String> usersLogin, boolean active) {
 
-        List<UserImportReport> resultats = new ArrayList<>();
+        List<UserReport> resultats = new ArrayList<>();
 
         for (String login : usersLogin) {
             // Recherche de l'utilisateur
@@ -243,14 +286,14 @@ public class UsersController
                 if (user != null) {
                     if (active) {
                         ldapManagerService.getManager().activateUser(login);
-                        resultats.add(new UserImportReport(login, 1, "Utilisateur activé"));
+                        resultats.add(new UserReport(login, 1, "Utilisateur activé"));
                     } else {
                         ldapManagerService.getManager().deactivateUser(login);
-                        resultats.add(new UserImportReport(login, 1, "Utilisateur désactivé"));
+                        resultats.add(new UserReport(login, 1, "Utilisateur désactivé"));
                     }
                 }
             } catch (Exception ex) {
-                resultats.add(new UserImportReport(login, -1, "Erreur: " + ex.getMessage()));
+                resultats.add(new UserReport(login, -1, "Erreur: " + ex.getMessage()));
             }
         }
 
