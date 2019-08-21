@@ -30,21 +30,27 @@ public class AuthenticationController
         AuthenticationResponse response = new AuthenticationResponse();
         response.status = false;
 
-        // Authentification openLDAP
-        UserLdap user = ldapManagerService.getManager().authenticateUser(authenticationRequest.username, authenticationRequest.password);
-        if (user != null) {
-            if (authenticationRequest.role != null && !authenticationRequest.role.isEmpty()) {
-                // Si le role fourni est présent dans la liste des roles alors on accepte
-                if (user.getRole().contains(authenticationRequest.role.toUpperCase()))
-                    response.status = true;
-            } else {
-                response.status = true;
-            }
-        }
+        System.out.printf("AuthenticationController.authenticate Login=%s, Role=%s", authenticationRequest.username, authenticationRequest.role);
 
-        if (response.status) {
-            response.token = jwtTokenService.createToken(user);
-            return ResponseEntity.ok().body(response);
+        // Authentification openLDAP
+        try {
+            UserLdap user = ldapManagerService.getManager().authenticateUser(authenticationRequest.username, authenticationRequest.password);
+            if (user != null) {
+                if (authenticationRequest.role != null && !authenticationRequest.role.isEmpty()) {
+                    // Si le role fourni est présent dans la liste des roles alors on accepte
+                    if (user.getRole().contains(authenticationRequest.role.toUpperCase()))
+                        response.status = true;
+                } else {
+                    response.status = true;
+                }
+            }
+
+            if (response.status) {
+                response.token = jwtTokenService.createToken(user);
+                return ResponseEntity.ok().body(response);
+            }
+        } catch (Exception ex) {
+            System.out.println("Erreur: " + ex.getMessage());
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(HttpStatus.UNAUTHORIZED.getReasonPhrase());

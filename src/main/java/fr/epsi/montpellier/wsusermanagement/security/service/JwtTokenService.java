@@ -7,7 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -17,28 +24,6 @@ import java.util.*;
 
 import fr.epsi.montpellier.Ldap.UserLdap;
 
-// https://stackoverflow.com/questions/39311157/only-rsaprivate-crt-keyspec-and-pkcs8encodedkeyspec-supported-for-rsa-private
-
-
-/*
-
-Génération des clés (extrait de http://codeartisan.blogspot.com/2009/05/public-key-cryptography-in-java.html)
-
-    Dans le terminal du dossier src/main/resources/keys, il faut créer les clés publique et privée:
-
-    # generate a 2048-bit RSA private key
-    $ openssl genrsa -out private_key.pem 2048
-
-    # convert private Key to PKCS#8 format (so Java can read it)
-    $ openssl pkcs8 -topk8 -inform PEM -outform DER -in private_key.pem -out private_key.der -nocrypt
-
-    # output public key portion in DER format (so Java can read it)
-    $ openssl rsa -in private_key.pem -pubout -outform DER -out public_key.der
-
-    # Génération de la clé pour PHP
-    openssl rsa -pubout -in private_key.pem -out public_key.pem
-
- */
 
 @Service
 public class JwtTokenService {
@@ -132,11 +117,20 @@ public class JwtTokenService {
     private byte[] readKey(String ressourceName) {
         try {
             ClassPathResource resource = new ClassPathResource(ressourceName);
-            return Files.readAllBytes(Paths.get(resource.getURI()));
+            InputStream stream = resource.getInputStream();
+            return getBytesFromInputStream(stream);
         } catch (Exception ex) {
-            // Do nothing
+            System.err.println(ex.getMessage());
         }
 
         return null;
+    }
+    private static byte[] getBytesFromInputStream(InputStream is) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        byte[] buffer = new byte[0xFFFF];
+        for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
+            os.write(buffer, 0, len);
+        }
+        return os.toByteArray();
     }
 }

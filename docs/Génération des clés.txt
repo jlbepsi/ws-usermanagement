@@ -11,5 +11,9 @@ Génération des clés (extrait de http://codeartisan.blogspot.com/2009/05/publi
     # output public key portion in DER format (so Java can read it)
     $ openssl rsa -in private_key.pem -pubout -outform DER -out public_key.der
 
+    # Création du certificat
+    $ openssl req -new -key private_key.pem -out public_cert.csr
+    $ openssl x509 -req -days 365 -in public_cert.csr -signkey private_key.pem -out public_cert.crt
+
     # Génération de la clé pour PHP
-    openssl rsa -pubout -in private_key.pem -out public_key.pem
+    $ openssl rsa -pubout -in private_key.pem -out public_key.pem

@@ -43,12 +43,14 @@ public class LdapManagerService {
 
     @PostConstruct
     private void buildManager() {
+        System.out.println("Construction de LdapManagerService, AdresseIP=" + adresseIP);
+
         try {
             manager = new LdapManager(adresseIP, adminLogin, adminPassword, baseDN, ouUtilisateurs, ouGroups);
             if (usersLdapDirectory != null)
                 manager.setUsersLdapDirectory(usersLdapDirectory);
         } catch (Exception ex) {
-            throw new ResourceNotFoundException("LdapManager", "config file", "");
+            throw new ResourceNotFoundException("LdapManager", "Error", ex.getMessage());
         }
     }
 }

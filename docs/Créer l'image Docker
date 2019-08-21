@@ -9,7 +9,7 @@ cp <SRC DU PROJET>/build/resources/main/application.properties target/
 
 Se placer dans le répertoire /docker/files/ws_usermanagement
 Créer le Dockerfile suivant :
- Start with a base image containing Java runtime
+# Start with a base image containing Java runtime
 FROM openjdk:8-jdk-alpine
 
 # Add Maintainer Info
@@ -41,7 +41,7 @@ docker image ls
 
 Démarrer le container
 docker run -p 8081:8081 --detach --name ws-user epsi/ws-users
-docker run -p 8081:8081 --detach --restart always--name ws-user epsi/ws-users
+docker run -p 8081:8081 --detach --restart always --name ws-user epsi/ws-users
 
 Vérifier
 http://localhost:8081/api/users
