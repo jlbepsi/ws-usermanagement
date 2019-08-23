@@ -1,0 +1,25 @@
+version: "3"
+services:
+  ws-users:
+    image: epsi/ws-users:latest
+    deploy:
+      # 3 instances
+      replicas: 3
+      resources:
+        limits:
+          # CPU limité à 20%
+          cpus: "0.2"
+          # Pas de limitation de mémoire
+          # memory: 50M
+      restart_policy:
+        #condition: on-failure
+        # Toujours redémarrer
+        condition: always
+    ports:
+      - "8081:8081"
+    volumes:
+      - /home/users/ldap:/home/users/ldap
+    networks:
+      - wsusers
+networks:
+  wsusers:
