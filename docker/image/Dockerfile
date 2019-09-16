@@ -15,6 +15,8 @@ ARG JAR_FILE=target/ws-usermanagement.jar
 
 # Create keys directory
 RUN mkdir keys
+# Create SSL key directory
+RUN mkdir keystore
 
 # Add the application's jar to the container
 COPY ${JAR_FILE} usermanagement.jar
@@ -22,6 +24,7 @@ COPY ${JAR_FILE} usermanagement.jar
 COPY target/application.properties application.properties
 COPY target/keys/private_key.der keys/private_key.der
 COPY target/keys/public_key.der keys/public_key.der
+COPY target/keystore/ws_users.p12 keystore/ws_users.p12
 
 # Run the jar file 
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/usermanagement.jar"]
