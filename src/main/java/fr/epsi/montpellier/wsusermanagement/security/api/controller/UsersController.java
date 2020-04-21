@@ -1,7 +1,15 @@
 package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 
 
+//      SWAGGER2: https://springframework.guru/spring-boot-restful-api-documentation-with-swagger-2/
+//                https://www.baeldung.com/swagger-2-documentation-for-spring-rest-api
+
+import fr.epsi.montpellier.wsusermanagement.security.model.ClassesInfo;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
@@ -19,40 +27,88 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@Api(value = "Web API pour la gestion des utilisateurs")
 public class UsersController
 {
 
     @Autowired
     private LdapManagerService ldapManagerService;
 
-    // Get all UserLdap
-    @GetMapping(path="/users")
-    public @ResponseBody Iterable<UserLdap> getAllUserLdaps() {
+    /** Retourne la liste de tous les utilisateurs
+     * La liste est composée d'objet UserLdap
+     *
+     * @return Liste d'objets UserLdap
+     * @see UserLdap
+     */
+    @GetMapping(value="/users")
+    @ApiOperation(value = "Liste tous les utilisateurs",
+            notes = "Also returns a link to retrieve all students with rel - all-students")
+    public @ResponseBody Iterable<UserLdap> getAllUsersLdap() {
         return ldapManagerService.getManager().listUsers();
     }
 
-    // Get all UserLdap of a class
-    @GetMapping("/users/classe/{id}")
-    public @ResponseBody Iterable<UserLdap> getUserLdapsByClass(@PathVariable(value = "id") String classe) {
+    /** Retourne la liste de tous les utilisateurs d'une classe
+     * La liste est composée d'objet UserLdap
+     *
+     * @param classe Nom de la classe des utilisateurs. Exemple: B1, B2, B3, ...
+     *
+     * @return Liste d'objets UserLdap
+     * @see UserLdap
+     */
+    @GetMapping(value = "/users/classe/{id}")
+    @ApiOperation(value = "Find student by id",
+            notes = "Also returns a link to retrieve all students with rel - all-students")
+    @ApiParam()
+    public @ResponseBody Iterable<UserLdap> getUserLdapByClass(@PathVariable(value = "id") String classe) {
         return ldapManagerService.getManager().listUsers(classe);
     }
 
+    /** Retourne la liste de tous les utilisateurs
+     * La liste est composée d'objet UserLdap
+     *
+     * @return Liste d'objets UserLdap
+     * @see UserLdap
+     */
+    @GetMapping(value="/users/classesinfo")
+    public @ResponseBody ClassesInfo getClassesInfo() {
+        ClassesInfo info = new ClassesInfo();
+        List<UserLdap> list = ldapManagerService.getManager().listUsers();
+        for (UserLdap user : list) {
+            info.addUser(user);
+        }
+        info.buildLists();
 
-    // Get a single UserLdap
-    @GetMapping("/users/{id}")
+        return info;
+    }
+
+
+    /** Retourne l'utilisateur associé au login
+     *
+     * @param login Login de l'utilisateur : prenom.nom
+     *
+     * @return Un objet UserLdap
+     * @see UserLdap
+     */
+    @GetMapping(value = "/users/{id}")
     public @ResponseBody UserLdap getUserLdapById(@PathVariable(value = "id") String login) {
         UserLdap user = ldapManagerService.getManager().getUser(login);
         if (user == null)
-            throw new ResourceNotFoundException("UserLdaps", "id", login);
+            throw new ResourceNotFoundException("UserLdap", "id", login);
 
         return user;
     }
 
-    // Add a UserLdap
+    /** Ajoute un utilisateur
+     *
+     * Seul le rôle SUPER_ADMIN est autorisé
+     *
+     * @param userDetails Objet UserLdap contenant les informations à ajouter
+     * @return Le status HTTP 201 - CREATED avec l'url de la ressource créée
+     * @see UserLdap
+     */
     @Secured( {"ROLE_SUPER_ADMIN"} )
-    @PostMapping("/users")
-    //@ResponseStatus(HttpStatus.CREATED)
-    //public @ResponseBody UserLdap addUserLdap(@Valid @RequestBody UserLdap userDetails) {
+    @PostMapping(value = "/users")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Void> addUserLdap(@Valid @RequestBody UserLdap userDetails) {
 
         try {
@@ -69,9 +125,30 @@ public class UsersController
         }
     }
 
-    // Update a UserLdap
+    /** Met à jour les informations d'un utilisateur
+     *
+     * Seul le rôle SUPER_ADMIN est autorisé
+     *
+     *  Les informations suivantes sont prises en compte:
+     * <ul>
+     *     <li>Nom</li>
+     *     <li>Prénom</li>
+     *     <li>Classe</li>
+     *     <li>Rôle</li>
+     *     <li>BTS (booléen indiquant si l'utilsateur passe le BTS)</li>
+     *     <li>BTS Parcours</li>
+     *     <li>BTS Numéro</li>
+     *     <li>Le groupe de la classe</li>
+     * </ul>
+     *
+     * @param login Login de l'utilisateur : prenom.nom
+     * @param usersDetails Objet UserLdap contenant les informations à modifier
+     *
+     * @return Un objet UserLdap
+     * @see UserLdap
+     */
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/{login}")
+    @PutMapping(value = "/users/{login}")
     public @ResponseBody UserLdap updateUserLdap(@PathVariable(value = "login") String login,
                                                  @Valid @RequestBody UserLdap usersDetails) {
 
@@ -84,25 +161,40 @@ public class UsersController
         }
     }
 
+    /** Change le mot de passe de l'utilisateur
+     *
+     * Seul le rôle SUPER_ADMIN est autorisé
+     *
+     * @param login Login de l'utilisateur : prenom.nom
+     * @param password Mot de passe de l'utilisateur
+     *
+     * @return Le status HTTP 200 - OK si le mot de passe a été créé, l'erreur sinon
+     */
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/password/{login}")
-    public @ResponseBody UserLdap updateUserPasswordLdap(@PathVariable(value = "login") String login,
-                                                 @Valid @RequestBody UserLdap usersDetails) {
+    @PutMapping(value = "/users/password/{login}")
+    public ResponseEntity<Void>  updateUserPasswordLdap(@PathVariable(value = "login") String login,
+                                                 @Valid @RequestBody String password) {
 
         try {
-            ldapManagerService.getManager().updateUserPassword(login, usersDetails.getMotDePasse());
+            ldapManagerService.getManager().updateUserPassword(login, password);
             // HTTP Status Code 200: Ok
-            return usersDetails;
+            return ResponseEntity.ok().build();
         } catch (Exception ex) {
             throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
         }
     }
 
 
-
-    // Import many UserLdap
+    /** Importation de plusieurs utilisateurs
+     *
+     * Seul le rôle SUPER_ADMIN est autorisé
+     *
+     * @param usersDetails La liste d'objet UserLdap à importer
+     * @return La liste d'objets UserReport contenant le résultat de l'importation
+     * @see UserLdap
+     */
     @Secured( {"ROLE_SUPER_ADMIN"} )
-    @PostMapping("/users/imports")
+    @PostMapping(value = "/users/imports")
     public @ResponseBody
     List<UserReport> importUsersLdap(@Valid @RequestBody List<UserLdap> usersDetails) {
 
@@ -142,9 +234,8 @@ public class UsersController
         return resultats;
     }
 
-    // deactive a list of login
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/deactivatelist")
+    @PutMapping(value = "/users/deactivatelist")
     public @ResponseBody
     List<UserReport> deactivateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
@@ -153,7 +244,7 @@ public class UsersController
     }
 
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/deactivate/{login}")
+    @PutMapping(value = "/users/deactivate/{login}")
     public ResponseEntity<Void>  deactivateUserLdap(@PathVariable(value = "login") String login) {
 
         try {
@@ -167,8 +258,8 @@ public class UsersController
 
     // active a UserLdap
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/activate/{login}")
-    public ResponseEntity<Void>  activateUserLdap(@PathVariable(value = "login") String login) {
+    @PutMapping(value = "/users/activate/{login}")
+    public ResponseEntity<Void> activateUserLdap(@PathVariable(value = "login") String login) {
 
         try {
             ldapManagerService.getManager().activateUser(login);
@@ -182,7 +273,7 @@ public class UsersController
 
     // deactive a list of login
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/activatelist")
+    @PutMapping(value = "/users/activatelist")
     public @ResponseBody
     List<UserReport> activateUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
@@ -192,7 +283,7 @@ public class UsersController
 
     // deactive a list of login
     @Secured( {"ROLE_SUPER_ADMIN"})
-    @PutMapping("/users/changebts")
+    @PutMapping(value = "/users/changebts")
     public @ResponseBody
     List<UserReport> changeBtsUsersLDAP(@Valid @RequestBody OptionsChangeBTS optionsChangeBTS) {
 
@@ -222,7 +313,7 @@ public class UsersController
 
     // Delete a UserLdap
     @Secured( {"ROLE_SUPER_ADMIN"} )
-    @DeleteMapping("/users/{login}")
+    @DeleteMapping(value = "/users/{login}")
     public ResponseEntity<Void> deleteUserLdap(@PathVariable(value = "login") String login) {
 
         try {
@@ -237,7 +328,7 @@ public class UsersController
 
     // Delete many UserLdap
     @Secured( {"ROLE_SUPER_ADMIN"} )
-    @DeleteMapping("/users/list")
+    @DeleteMapping(value = "/users/list")
     public @ResponseBody
     List<UserReport> deleteUsersLdap(@Valid @RequestBody List<String> usersLogin) {
 
@@ -262,7 +353,8 @@ public class UsersController
     }
 
     // Bascule tous les utilisateurs dans la classe NA
-    @PutMapping("/users/setuserstona")
+    @Secured( {"ROLE_SUPER_ADMIN"})
+    @PutMapping(value = "/users/setuserstona")
     public ResponseEntity<Void>  setUsersToNA() {
 
         try {

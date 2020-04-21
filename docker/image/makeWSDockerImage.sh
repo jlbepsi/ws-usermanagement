@@ -54,4 +54,4 @@ docker build -t epsi/ws-users .
 
 
 echo "Démarrage du container"
-docker run -p 8081:8081 --detach --mount type=bind,source=/home/users/ldap,target=/home/users/ldap --restart always --name ws-user epsi/ws-users
+docker run -p 8081:8080 --detach --mount type=bind,source=/home/users/ldap,target=/home/users/ldap --restart always --name ws-user epsi/ws-users
