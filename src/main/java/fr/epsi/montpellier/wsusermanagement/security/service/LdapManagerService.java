@@ -14,6 +14,9 @@ public class LdapManagerService {
     @Value("${adresse_ip}")
     private String adresseIP;
 
+    @Value("${ldap_port}")
+    private String port;
+
     @Value("${admin_login}")
     private String adminLogin;
 
@@ -49,7 +52,7 @@ public class LdapManagerService {
         System.out.println("Construction de LdapManagerService, AdresseIP=" + adresseIP);
 
         try {
-            manager = new LdapManager(adresseIP, adminLogin, adminPassword, baseDN, ouUtilisateurs, ouGroups, groupeEtudiants);
+            manager = new LdapManager(adresseIP, port, adminLogin, adminPassword, baseDN, ouUtilisateurs, ouGroups, groupeEtudiants);
             if (usersLdapDirectory != null)
                 manager.setUsersLdapDirectory(usersLdapDirectory);
         } catch (Exception ex) {
