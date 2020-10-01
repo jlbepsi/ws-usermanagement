@@ -16,7 +16,7 @@ apply plugin: 'io.spring.dependency-management'
 
 
 group = 'fr.epsi.montpellier'
-version = '0.9.3'
+version = '0.9.4'
 sourceCompatibility = 1.8
 
 repositories {
@@ -37,6 +37,7 @@ dependencies {
     compile files('libs/LdapManagement.jar')
     //compile fileTree(include: ['*.jar'], dir: 'libs')
 
+    // JWT
     runtime ('io.jsonwebtoken:jjwt-impl:0.10.5',
             'io.jsonwebtoken:jjwt-jackson:0.10.5')
 

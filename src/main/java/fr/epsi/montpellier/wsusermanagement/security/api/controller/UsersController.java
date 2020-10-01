@@ -14,10 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.NamingException;
 import javax.validation.Valid;
 import fr.epsi.montpellier.Ldap.UserLdap;
 import fr.epsi.montpellier.wsusermanagement.ResourceNotFoundException;
 import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -103,7 +105,8 @@ public class UsersController
      * Seul le rôle SUPER_ADMIN est autorisé
      *
      * @param userDetails Objet UserLdap contenant les informations à ajouter
-     * @return Le status HTTP 201 - CREATED avec l'url de la ressource créée
+     * @return Le status HTTP 201 - CREATED avec l'url de la ressource créée si tout est ok
+     *      *         Le status HTTP BAD_REQUEST sinon
      * @see UserLdap
      */
     @Secured( {"ROLE_SUPER_ADMIN"} )
@@ -112,7 +115,7 @@ public class UsersController
     public ResponseEntity<Void> addUserLdap(@Valid @RequestBody UserLdap userDetails) {
 
         try {
-            ldapManagerService.getManager().addUser(userDetails);
+            internalAddUser(userDetails);
 
             URI location = ServletUriComponentsBuilder.fromCurrentRequest().path(
                     "/{id}").buildAndExpand(userDetails.getLogin()).toUri();
@@ -121,7 +124,11 @@ public class UsersController
             return ResponseEntity.created(location).build();
             //return userDetails;
         } catch (Exception ex) {
-            throw new ResourceNotFoundException("addUserLdap", "usersDetails", "");
+            logError(ex);
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("addUserLdad, user: %s", userDetails.getDescription()));
         }
     }
 
@@ -142,22 +149,32 @@ public class UsersController
      * </ul>
      *
      * @param login Login de l'utilisateur : prenom.nom
-     * @param usersDetails Objet UserLdap contenant les informations à modifier
+     * @param userDetails Objet UserLdap contenant les informations à modifier
      *
-     * @return Un objet UserLdap
+     * @return Un objet UserLdap avec le status HTTP 200 si tout est ok
+     *         Le status HTTP NOT_FOUND ou BAD_REQUEST sinon
      * @see UserLdap
      */
     @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping(value = "/users/{login}")
     public @ResponseBody UserLdap updateUserLdap(@PathVariable(value = "login") String login,
-                                                 @Valid @RequestBody UserLdap usersDetails) {
+                                                 @Valid @RequestBody UserLdap userDetails) {
 
         try {
-            ldapManagerService.getManager().updateUser(login, usersDetails);
-            // HTTP Status Code 200: Ok
-            return usersDetails;
+            if (internalUpdateUser(userDetails)) {
+                // HTTP Status Code 200: Ok
+                return userDetails;
+            }
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "L'utilisateur n'a pas été trouvé");
+
         } catch (Exception ex) {
-            throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
+            logError(ex);
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("updateUserLdap, user: %s", userDetails.getDescription()));
         }
     }
 
@@ -180,7 +197,11 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
-            throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
+            logError(ex);
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("updateUserLdap, user.login: %s", login));
         }
     }
 
@@ -218,11 +239,11 @@ public class UsersController
 
                 if (user == null) {
                     // Ajout
-                    ldapManagerService.getManager().addUser(userImport);
+                    internalAddUser(userImport);
                     resultats.add(new UserReport(userImport.getLogin(), 1, "Créé"));
                 } else {
                     // Modification
-                    ldapManagerService.getManager().updateUser(userImport.getLogin(), userImport);
+                    internalUpdateUser(userImport);
                     resultats.add(new UserReport(userImport.getLogin(), 2, "Mis à jour"));
                 }
             } catch (Exception ex) {
@@ -252,6 +273,7 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
+            logError(ex);
             return ResponseEntity.notFound().build();
         }
     }
@@ -267,6 +289,7 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
+            logError(ex);
             return ResponseEntity.notFound().build();
         }
     }
@@ -299,7 +322,7 @@ public class UsersController
                     user.setBts(optionsChangeBTS.isBts());
                     user.setBtsParcours(optionsChangeBTS.getBtsparcours());
                     user.setBtsNumero("0");
-                    ldapManagerService.getManager().updateUser(user.getLogin(), user);
+                    internalUpdateUser(user);
 
                     resultats.add(new UserReport(login, 1, "Mise à jour"));
                 }
@@ -315,15 +338,17 @@ public class UsersController
     @Secured( {"ROLE_SUPER_ADMIN"} )
     @DeleteMapping(value = "/users/{login}")
     public ResponseEntity<Void> deleteUserLdap(@PathVariable(value = "login") String login) {
+        boolean success = false;
 
         try {
-            ldapManagerService.getManager().deleteUser(login);
-            // HTTP Status Code 204: No Content
-            return ResponseEntity.noContent().build();
+            if (internalRemoveUser(login)) {
+                success = true;
+            }
+
         } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-            //throw new ResourceNotFoundException("updateUserLdap", "usersDetails", "");
+            logError(ex);
         }
+        return (success ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build());
     }
 
     // Delete many UserLdap
@@ -331,25 +356,47 @@ public class UsersController
     @DeleteMapping(value = "/users/list")
     public @ResponseBody
     List<UserReport> deleteUsersLdap(@Valid @RequestBody List<String> usersLogin) {
-
         List<UserReport> resultats = new ArrayList<>();
 
         for (String login : usersLogin) {
             // Recherche de l'utilisateur
             UserLdap user = ldapManagerService.getManager().getUser(login);
-            try {
-                if (user == null) {
-                    resultats.add(new UserReport(login, -2, "Non trouvé"));
-                } else {
-                    ldapManagerService.getManager().deleteUser(login);
-                    resultats.add(new UserReport(login, 1, "Supprimé"));
+            if (user == null) {
+                resultats.add(new UserReport(login, -2, "Non trouvé"));
+            } else {
+                try {
+                    if (internalRemoveUser(login)) {
+                        resultats.add(new UserReport(login, 1, "Supprimé"));
+                    } else {
+                        resultats.add(new UserReport(login, -2, "Non trouvé"));
+                    }
+                } catch (Exception ex) {
+                    logError(ex);
+                    resultats.add(new UserReport(login, -1, "Erreur: " + ex.getMessage()));
                 }
-            } catch (Exception ex) {
-                resultats.add(new UserReport(login, -1, "Erreur: " + ex.getMessage()));
             }
         }
 
         return resultats;
+    }
+
+    // Bascule la classe précédente des utilisateurs dans la classe NA
+    @Secured( {"ROLE_SUPER_ADMIN"})
+    @PutMapping(value = "/users/setclassnatousers")
+    public ResponseEntity<Void>  setNAClassToUsers() {
+
+        try {
+            ldapManagerService.getManager().setNAClassToUsers();
+
+            // HTTP Status Code 200: Ok
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            logError(ex);
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "setNAClassToUsers");
+        }
     }
 
     // Bascule tous les utilisateurs dans la classe NA
@@ -363,7 +410,11 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
-            throw new ResourceNotFoundException("updateUserLdap", "setUsersToNA", "");
+            logError(ex);
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "setUsersToNA");
         }
     }
 
@@ -390,5 +441,28 @@ public class UsersController
         }
 
         return resultats;
+    }
+
+    private void internalAddUser(UserLdap user) throws NamingException {
+        ldapManagerService.getManager().addUser(user);
+
+    }
+    private boolean internalUpdateUser(UserLdap user) throws NamingException {
+        return ldapManagerService.getManager().updateUser(user.getLogin(), user);
+
+    }
+    private boolean internalRemoveUser(String login) throws NamingException {
+        logMessage(String.format("Utilisateur supprimé: %s", login));
+        return ldapManagerService.getManager().deleteUser(login);
+    }
+
+
+    private void logError(Exception exception) {
+        System.err.printf("Error, Class=%s\n", this.getClass().getCanonicalName());
+        exception.printStackTrace(System.err);
+    }
+
+    private void logMessage(String message) {
+        System.out.printf("Message=%s\nClass=%s\n", message, this.getClass().getCanonicalName());
     }
 }
