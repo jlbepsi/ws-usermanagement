@@ -4,11 +4,11 @@ package fr.epsi.montpellier.wsusermanagement.security.api.controller;
 //      SWAGGER2: https://springframework.guru/spring-boot-restful-api-documentation-with-swagger-2/
 //                https://www.baeldung.com/swagger-2-documentation-for-spring-rest-api
 
+import fr.epsi.montpellier.wsusermanagement.security.amqp.RabbitMQSender;
 import fr.epsi.montpellier.wsusermanagement.security.model.ClassesInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.naming.NamingException;
 import javax.validation.Valid;
 import fr.epsi.montpellier.Ldap.UserLdap;
-import fr.epsi.montpellier.wsusermanagement.ResourceNotFoundException;
 import fr.epsi.montpellier.wsusermanagement.security.service.LdapManagerService;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -32,9 +31,17 @@ import java.util.List;
 @Api(value = "Web API pour la gestion des utilisateurs")
 public class UsersController
 {
+    // @Autowired
+    private final RabbitMQSender rabbitMQSenderer;
+    // @Autowired
+    private final LdapManagerService ldapManagerService;
 
-    @Autowired
-    private LdapManagerService ldapManagerService;
+    // @Autowired by Spring Boot
+    public UsersController(LdapManagerService ldapManagerService, RabbitMQSender rabbitMQSenderer) {
+        this.ldapManagerService = ldapManagerService;
+        this.rabbitMQSenderer = rabbitMQSenderer;
+    }
+
 
     /** Retourne la liste de tous les utilisateurs
      * La liste est composée d'objet UserLdap
@@ -45,7 +52,7 @@ public class UsersController
     @GetMapping(value="/users")
     @ApiOperation(value = "Liste tous les utilisateurs",
             notes = "Also returns a link to retrieve all students with rel - all-students")
-    public @ResponseBody Iterable<UserLdap> getAllUsersLdap() {
+    public Iterable<UserLdap> getAllUsersLdap() {
         return ldapManagerService.getManager().listUsers();
     }
 
@@ -61,7 +68,10 @@ public class UsersController
     @ApiOperation(value = "Find student by id",
             notes = "Also returns a link to retrieve all students with rel - all-students")
     @ApiParam()
-    public @ResponseBody Iterable<UserLdap> getUserLdapByClass(@PathVariable(value = "id") String classe) {
+    public Iterable<UserLdap> getUserLdapByClass(@PathVariable(value = "id") String classe) {
+        // TODO DEBUG Delete this line
+        rabbitMQSenderer.sendDebugMessage("getUserLdapByClass=" + classe);
+
         return ldapManagerService.getManager().listUsers(classe);
     }
 
@@ -72,7 +82,10 @@ public class UsersController
      * @see UserLdap
      */
     @GetMapping(value="/users/classesinfo")
-    public @ResponseBody ClassesInfo getClassesInfo() {
+    public ClassesInfo getClassesInfo() {
+        // TODO DEBUG Delete this line
+        rabbitMQSenderer.sendDebugMessage("getClassesInfo");
+
         ClassesInfo info = new ClassesInfo();
         List<UserLdap> list = ldapManagerService.getManager().listUsers();
         for (UserLdap user : list) {
@@ -92,11 +105,16 @@ public class UsersController
      * @see UserLdap
      */
     @GetMapping(value = "/users/{id}")
-    public @ResponseBody UserLdap getUserLdapById(@PathVariable(value = "id") String login) {
-        UserLdap user = ldapManagerService.getManager().getUser(login);
-        if (user == null)
-            throw new ResourceNotFoundException("UserLdap", "id", login);
+    public UserLdap getUserLdapById(@PathVariable(value = "id") String login) {
+        // TODO DEBUG Delete this line
+        rabbitMQSenderer.sendDebugMessage("getUserLdapById=" + login);
 
+        UserLdap user = ldapManagerService.getManager().getUser(login);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "L'utilisateur n'a pas été trouvé");
+        }
         return user;
     }
 
@@ -157,11 +175,11 @@ public class UsersController
      */
     @Secured( {"ROLE_SUPER_ADMIN"})
     @PutMapping(value = "/users/{login}")
-    public @ResponseBody UserLdap updateUserLdap(@PathVariable(value = "login") String login,
+    public UserLdap updateUserLdap(@PathVariable(value = "login") String login,
                                                  @Valid @RequestBody UserLdap userDetails) {
 
         try {
-            if (internalUpdateUser(userDetails)) {
+            if (ldapManagerService.getManager().updateUser(userDetails.getLogin(), userDetails)) {
                 // HTTP Status Code 200: Ok
                 return userDetails;
             }
@@ -243,7 +261,7 @@ public class UsersController
                     resultats.add(new UserReport(userImport.getLogin(), 1, "Créé"));
                 } else {
                     // Modification
-                    internalUpdateUser(userImport);
+                    ldapManagerService.getManager().updateUser(userImport.getLogin(), userImport);
                     resultats.add(new UserReport(userImport.getLogin(), 2, "Mis à jour"));
                 }
             } catch (Exception ex) {
@@ -322,7 +340,7 @@ public class UsersController
                     user.setBts(optionsChangeBTS.isBts());
                     user.setBtsParcours(optionsChangeBTS.getBtsparcours());
                     user.setBtsNumero("0");
-                    internalUpdateUser(user);
+                    ldapManagerService.getManager().updateUser(user.getLogin(), user);
 
                     resultats.add(new UserReport(login, 1, "Mise à jour"));
                 }
@@ -443,17 +461,29 @@ public class UsersController
         return resultats;
     }
 
+
+    /** Ajoute un utilsateur et envoie un message AMQP
+     *
+     * @param user Objet utilisateur LDAP à ajouter
+     * @throws NamingException si erreur
+     */
     private void internalAddUser(UserLdap user) throws NamingException {
         ldapManagerService.getManager().addUser(user);
-
+        // Send AMQP Message
+        rabbitMQSenderer.sendAddMessage(user);
     }
-    private boolean internalUpdateUser(UserLdap user) throws NamingException {
-        return ldapManagerService.getManager().updateUser(user.getLogin(), user);
-
-    }
+    /** Supprimer un utilsateur d'après son login et envoie un message AMQP
+     *
+     * @param login Login de l'utilisateur LDAP à supprimer
+     * @throws NamingException si erreur
+     */
     private boolean internalRemoveUser(String login) throws NamingException {
         logMessage(String.format("Utilisateur supprimé: %s", login));
-        return ldapManagerService.getManager().deleteUser(login);
+        if (ldapManagerService.getManager().deleteUser(login)) {
+            // Send AMQP Message
+            rabbitMQSenderer.sendDeleteMessage(login);
+        }
+        return false;
     }
 
 

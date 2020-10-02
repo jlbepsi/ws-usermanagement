@@ -27,6 +27,8 @@ dependencies {
     // Spring
     compile("org.springframework.boot:spring-boot-starter-web")
     compile('org.springframework.boot:spring-boot-starter-security')
+    // Advanced Message Queuing Protocol
+    compile("org.springframework.boot:spring-boot-starter-amqp")
     // JWT
     compile('io.jsonwebtoken:jjwt-api:0.10.5')
     // Swagger

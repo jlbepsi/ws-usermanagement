@@ -1,12 +1,13 @@
 package fr.epsi.montpellier.wsusermanagement.security.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
 import fr.epsi.montpellier.Ldap.LdapManager;
-import fr.epsi.montpellier.wsusermanagement.ResourceNotFoundException;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class LdapManagerService {
@@ -48,7 +49,7 @@ public class LdapManagerService {
     }
 
     @PostConstruct
-    private void buildManager() {
+    private void buildManager() throws Exception {
         System.out.println("Construction de LdapManagerService, AdresseIP=" + adresseIP);
 
         try {
@@ -56,7 +57,7 @@ public class LdapManagerService {
             if (usersLdapDirectory != null)
                 manager.setUsersLdapDirectory(usersLdapDirectory);
         } catch (Exception ex) {
-            throw new ResourceNotFoundException("LdapManager", "Error", ex.getMessage());
+            throw new Exception("LdapManager", ex);
         }
     }
 }
