@@ -1,8 +1,17 @@
-server.port=8081
-
+# JWT
 jwt.expire.hours=2
 jwt.token.private_key=keys/private_key.der
 jwt.token.public_key=keys/public_key.der
+
+# RabbitMQ Server properties
+spring.rabbitmq.host= <adresse IP du serveur RabbitMQ>
+spring.rabbitmq.port= <port du serveur RabbitMQ>
+spring.rabbitmq.username= <le login admin>
+spring.rabbitmq.password= <le mot de passe>
+# AMQP properties
+rabbitmq.queueName=ldap.users
+rabbitmq.topicName=ldap
+rabbitmq.routingKey=ldap.users.#
 
 adresse_ip=<adresse IP du serveur LDAP>
 admin_login=<le login admin>
@@ -13,13 +22,6 @@ ou_utilisateurs=ou=Pedago,ou=Utilisateurs
 ou_groups=ou=Groupes
 groupe_etudiants=Etudiants
 
-users_ldap_directory=/home/users/ldap
-
-# The format used for the keystore. It could be set to JKS in case it is a JKS file
-server.ssl.key-store-type=PKCS12
-# The path to the keystore containing the certificate
-server.ssl.key-store=classpath:keystore/ws_users.p12
-# The password used to generate the certificate
-server.ssl.key-store-password=leMotDePasseDuCertificat
-# The alias mapped to the certificate
-server.ssl.key-alias=ws_users
+# Non utilisé
+users_ldap_directory=
+# users_ldap_directory=/home/users/ldap

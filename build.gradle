@@ -16,7 +16,7 @@ apply plugin: 'io.spring.dependency-management'
 
 
 group = 'fr.epsi.montpellier'
-version = '0.9.4'
+version = '0.9.5'
 sourceCompatibility = 1.8
 
 repositories {
@@ -27,6 +27,7 @@ dependencies {
     // Spring
     compile("org.springframework.boot:spring-boot-starter-web")
     compile('org.springframework.boot:spring-boot-starter-security')
+    compile("org.springframework.boot:spring-boot-starter-log4j2")
     // Advanced Message Queuing Protocol
     compile("org.springframework.boot:spring-boot-starter-amqp")
     // JWT
@@ -46,3 +47,15 @@ dependencies {
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('org.springframework.security:spring-security-test')
 }
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+}
+/*configurations.all {
+    resolutionStrategy.dependencySubstitution.all { dependency ->
+        if (dependency.requested instanceof ModuleComponentSelector && dependency.requested.module == 'spring-boot-starter-logging') {
+            dependency.useTarget("org.springframework.boot:spring-boot-starter-log4j2:$dependency.requested.version", 'Use Log4j2 instead of Logback')
+        }
+    }
+}*/

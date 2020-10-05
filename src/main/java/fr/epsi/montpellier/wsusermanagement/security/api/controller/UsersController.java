@@ -9,10 +9,13 @@ import fr.epsi.montpellier.wsusermanagement.security.model.ClassesInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+
+import org.apache.logging.log4j.Logger;
 
 import javax.naming.NamingException;
 import javax.validation.Valid;
@@ -35,6 +38,9 @@ public class UsersController
     private final RabbitMQSender rabbitMQSenderer;
     // @Autowired
     private final LdapManagerService ldapManagerService;
+
+    // Logger
+    private static final Logger logger = LogManager.getLogger("WSUserManagement");
 
     // @Autowired by Spring Boot
     public UsersController(LdapManagerService ldapManagerService, RabbitMQSender rabbitMQSenderer) {
@@ -69,9 +75,6 @@ public class UsersController
             notes = "Also returns a link to retrieve all students with rel - all-students")
     @ApiParam()
     public Iterable<UserLdap> getUserLdapByClass(@PathVariable(value = "id") String classe) {
-        // TODO DEBUG Delete this line
-        rabbitMQSenderer.sendDebugMessage("getUserLdapByClass=" + classe);
-
         return ldapManagerService.getManager().listUsers(classe);
     }
 
@@ -83,9 +86,6 @@ public class UsersController
      */
     @GetMapping(value="/users/classesinfo")
     public ClassesInfo getClassesInfo() {
-        // TODO DEBUG Delete this line
-        rabbitMQSenderer.sendDebugMessage("getClassesInfo");
-
         ClassesInfo info = new ClassesInfo();
         List<UserLdap> list = ldapManagerService.getManager().listUsers();
         for (UserLdap user : list) {
@@ -106,9 +106,6 @@ public class UsersController
      */
     @GetMapping(value = "/users/{id}")
     public UserLdap getUserLdapById(@PathVariable(value = "id") String login) {
-        // TODO DEBUG Delete this line
-        rabbitMQSenderer.sendDebugMessage("getUserLdapById=" + login);
-
         UserLdap user = ldapManagerService.getManager().getUser(login);
         if (user == null) {
             throw new ResponseStatusException(
@@ -142,7 +139,7 @@ public class UsersController
             return ResponseEntity.created(location).build();
             //return userDetails;
         } catch (Exception ex) {
-            logError(ex);
+            logError( String.format("add(%s)", userDetails.getLogin()), ex);
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -188,7 +185,7 @@ public class UsersController
                     "L'utilisateur n'a pas été trouvé");
 
         } catch (Exception ex) {
-            logError(ex);
+            logError( String.format("update(%s)", userDetails.getLogin()), ex);
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -215,7 +212,7 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
-            logError(ex);
+            logError( String.format("updatePassword(%s)", login), ex);
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -291,7 +288,7 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
-            logError(ex);
+            logError( String.format("deactivate(%s)", login), ex);
             return ResponseEntity.notFound().build();
         }
     }
@@ -307,7 +304,7 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
-            logError(ex);
+            logError( String.format("activate(%s)", login), ex);
             return ResponseEntity.notFound().build();
         }
     }
@@ -364,7 +361,7 @@ public class UsersController
             }
 
         } catch (Exception ex) {
-            logError(ex);
+            logError( String.format("delete(%s)", login), ex);
         }
         return (success ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build());
     }
@@ -389,7 +386,7 @@ public class UsersController
                         resultats.add(new UserReport(login, -2, "Non trouvé"));
                     }
                 } catch (Exception ex) {
-                    logError(ex);
+                    logError( String.format("delete(%s)", login), ex);
                     resultats.add(new UserReport(login, -1, "Erreur: " + ex.getMessage()));
                 }
             }
@@ -409,7 +406,7 @@ public class UsersController
             // HTTP Status Code 200: Ok
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
-            logError(ex);
+            logError( ex);
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -488,11 +485,13 @@ public class UsersController
 
 
     private void logError(Exception exception) {
-        System.err.printf("Error, Class=%s\n", this.getClass().getCanonicalName());
-        exception.printStackTrace(System.err);
+        logger.error(exception);
+    }
+    private void logError(String message, Exception exception) {
+        logger.error(message, exception);
     }
 
     private void logMessage(String message) {
-        System.out.printf("Message=%s\nClass=%s\n", message, this.getClass().getCanonicalName());
+        logger.info(message);
     }
 }

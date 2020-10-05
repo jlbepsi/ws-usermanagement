@@ -2,6 +2,9 @@ package fr.epsi.montpellier.wsusermanagement.security.amqp;
 
 
 import fr.epsi.montpellier.Ldap.UserLdap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,9 @@ public class RabbitMQSender {
     private String routingKey;
 
 
+    // Logger
+    private static final Logger logger = LogManager.getLogger("MQSender");
+    // RabbitMQ
     private final RabbitTemplate rabbitTemplate;
 
     public RabbitMQSender(RabbitTemplate rabbitTemplate) {
@@ -29,15 +35,12 @@ public class RabbitMQSender {
         sendMessage("-1", login, "Delete user");
     }
 
-    // TODO Delete this method
-    public void sendDebugMessage(String message) {
-        rabbitTemplate.convertAndSend(topicName, routingKey, message);
-
-    }
-
     private void sendMessage(String status, String login, String message) {
-        rabbitTemplate.convertAndSend(topicName, routingKey,
-                String.format("{'status':'%s', 'login': '%s', 'message':'%s'}", status, login, message)
-        );
+        String amqpMessage = String.format("{'status':'%s', 'login': '%s', 'message':'%s'}", status, login, message);
+        try {
+            rabbitTemplate.convertAndSend(topicName, routingKey, amqpMessage);
+        } catch (AmqpException exception) {
+            logger.error(String.format("RabbitSend('%s')", amqpMessage), exception);
+        }
     }
 }
