@@ -36,7 +36,7 @@ public class RabbitMQSender {
     }
 
     private void sendMessage(String status, String login, String message) {
-        String amqpMessage = String.format("{'status':'%s', 'login': '%s', 'message':'%s'}", status, login, message);
+        String amqpMessage = String.format("{\"status\":\"%s\", \"login\": \"%s\", \"message\":\"%s\"}", status, login, message);
         try {
             rabbitTemplate.convertAndSend(topicName, routingKey, amqpMessage);
         } catch (AmqpException exception) {

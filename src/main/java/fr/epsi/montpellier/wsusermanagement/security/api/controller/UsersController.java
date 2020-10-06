@@ -465,6 +465,7 @@ public class UsersController
      * @throws NamingException si erreur
      */
     private void internalAddUser(UserLdap user) throws NamingException {
+        logMessage("addUserLDAP: " + user.getDescription());
         ldapManagerService.getManager().addUser(user);
         // Send AMQP Message
         rabbitMQSenderer.sendAddMessage(user);
@@ -475,10 +476,11 @@ public class UsersController
      * @throws NamingException si erreur
      */
     private boolean internalRemoveUser(String login) throws NamingException {
-        logMessage(String.format("Utilisateur supprimé: %s", login));
+        logMessage(String.format("removeUser: %s", login));
         if (ldapManagerService.getManager().deleteUser(login)) {
             // Send AMQP Message
             rabbitMQSenderer.sendDeleteMessage(login);
+            return true;
         }
         return false;
     }

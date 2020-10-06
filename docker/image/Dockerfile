@@ -22,6 +22,7 @@ RUN mkdir keys
 COPY ${JAR_FILE} usermanagement.jar
 # Add dependencies
 COPY target/application.properties application.properties
+COPY target/log4j2-spring.xml log4j2-spring.xml
 COPY target/keys/private_key.der keys/private_key.der
 COPY target/keys/public_key.der keys/public_key.der
 # COPY target/keystore/ws_users.p12 keystore/ws_users.p12

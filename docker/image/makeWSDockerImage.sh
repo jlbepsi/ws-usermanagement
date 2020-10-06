@@ -1,42 +1,21 @@
 #!/bin/bash
 
-# Variables
-BUILDDIR="../../build"
-SRCDIR="../../src"
-
-# Copie du jar dans le repertoire target pour construire l'image apres
-# ATTENTION il ne doit y avoir qu'un seul jar
-COUNT=$(ls ${BUILDDIR}/libs/ws-usermanagement*.jar | wc -l)
-if [ $COUNT -gt 1 ]
-then
-	echo "Il ne doit y avoir qu'un  seul fichier jar dans le répertoire de build"
-	return
-fi
-
-cp ${BUILDDIR}/libs/ws-usermanagement*.jar target/ws-usermanagement.jar
-# Copie du fichier de configuration
-cp ${SRCDIR}/main/resources/application.properties target/
-# Copie des clés
-cp ${SRCDIR}/main/resources/keys/private_key.der target/keys/private_key.der
-cp ${SRCDIR}/main/resources/keys/public_key.der target/keys/public_key.der
-
-
 echo "Arret des containers"
 # Liste des containers en cours
-LISTIDS=$(docker ps -aqf "name=ws-user")
+LISTIDS=$(docker ps -aqf "name=ws-users")
 # Si la liste n'est pas vide ...
 if [ ! -z $LISTIDS ] 
 then
 	# ... on arrete les containers
-	docker container stop $(docker ps -aqf "name=ws-user")
+	docker container stop $(docker ps -aqf "name=ws-users")
 fi
 
 echo "Suppression des containers"
 # Suppression du container si il existe
-LISTIDS=$(docker ps -aqf "name=ws-user")
+LISTIDS=$(docker ps -aqf "name=ws-users")
 if [ ! -z $LISTIDS ] 
 then
-	docker container rm $(docker ps -aqf "name=ws-user")
+	docker container rm $(docker ps -aqf "name=ws-users")
 fi
 
 echo "Suppression de l'image"
@@ -54,4 +33,7 @@ docker build -t epsi/ws-users .
 
 
 echo "Démarrage du container"
-docker run -p 8081:8080 --detach --mount type=bind,source=/home/users/ldap,target=/home/users/ldap --restart always --name ws-user epsi/ws-users
+docker run -p 8081:8080 \
+	--mount type=bind,source=/home/users/ldap,target=/home/users/ldap \
+	--mount type=bind,source=/docker/server/wsusermanagement/logs/,target=/logs \
+	--detach  --restart always --name ws-users epsi/ws-users
