@@ -262,6 +262,7 @@ public class UsersController
                     resultats.add(new UserReport(userImport.getLogin(), 2, "Mis à jour"));
                 }
             } catch (Exception ex) {
+                logError(String.format("Import(%s): ", userImport.getLogin()), ex);
                 resultats.add(new UserReport(userImport.getLogin(), -1, "Erreur: " + ex.getMessage()));
             }
         }
