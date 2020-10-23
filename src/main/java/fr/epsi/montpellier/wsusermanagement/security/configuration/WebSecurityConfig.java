@@ -47,6 +47,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/swagger-ui.html**").permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/api/users/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/home/**").permitAll() /*  To Remove */
                 .anyRequest().authenticated();
 
         http

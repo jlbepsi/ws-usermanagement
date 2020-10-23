@@ -1,0 +1,27 @@
+# JWT
+jwt.expire.hours=2
+jwt.token.private_key=keys/private_key.der
+jwt.token.public_key=keys/public_key.der
+
+# RabbitMQ Server properties
+spring.rabbitmq.host=rabbitmq.montpellier.epsi.fr
+spring.rabbitmq.port=5262
+spring.rabbitmq.username=admin
+spring.rabbitmq.password=citK19c3
+# AMQP properties
+rabbitmq.queueName=ldap.users
+rabbitmq.topicName=ldap
+rabbitmq.routingKey=ldap.users.#
+
+# LDAP
+adresse_ip=192.168.10.113
+admin_password=DreJhM34opAE3njbFbps
+ldap_port=389
+
+base_dn=dc=montpellier,dc=lan
+ou_utilisateurs=ou=Pedago,ou=Utilisateurs
+ou_groups=ou=Groupes
+groupe_etudiants=Etudiants
+
+users_ldap_directory=
+# users_ldap_directory=/home/users/ldap
