@@ -39,8 +39,10 @@ public class RabbitMQSender {
         String amqpMessage = String.format("{\"status\":\"%s\", \"login\": \"%s\", \"message\":\"%s\"}", status, login, message);
         try {
             rabbitTemplate.convertAndSend(topicName, routingKey, amqpMessage);
-        } catch (AmqpException exception) {
-            logger.error(String.format("RabbitSend('%s')", amqpMessage), exception);
+        } catch (AmqpException amqpException) {
+            logger.error(String.format("RabbitSend('%s') - AMQP Error", amqpMessage), amqpException);
+        } catch (Exception exception) {
+            logger.error(String.format("RabbitSend('%s') - General Error", amqpMessage), exception);
         }
     }
 }

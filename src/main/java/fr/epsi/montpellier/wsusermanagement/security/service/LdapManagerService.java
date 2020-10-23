@@ -1,13 +1,11 @@
 package fr.epsi.montpellier.wsusermanagement.security.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
 import fr.epsi.montpellier.Ldap.LdapManager;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class LdapManagerService {

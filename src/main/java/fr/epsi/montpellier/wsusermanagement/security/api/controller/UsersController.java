@@ -465,7 +465,7 @@ public class UsersController
      * @param user Objet utilisateur LDAP à ajouter
      * @throws NamingException si erreur
      */
-    private void internalAddUser(UserLdap user) throws NamingException {
+    private void internalAddUser(UserLdap user) throws Exception {
         logMessage("addUserLDAP: " + user.getDescription());
         ldapManagerService.getManager().addUser(user);
         // Send AMQP Message
