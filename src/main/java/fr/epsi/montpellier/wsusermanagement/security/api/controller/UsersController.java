@@ -337,6 +337,7 @@ public class UsersController
                 } else {
                     user.setBts(optionsChangeBTS.isBts());
                     user.setBtsParcours(optionsChangeBTS.getBtsparcours());
+                    // Si l'utilisateur a déjà un numéro, on l'efface ??
                     user.setBtsNumero("0");
                     ldapManagerService.getManager().updateUser(user.getLogin(), user);
 

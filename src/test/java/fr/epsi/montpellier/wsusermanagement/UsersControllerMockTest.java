@@ -20,9 +20,7 @@ import static org.assertj.core.internal.bytebuddy.matcher.ElementMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -95,10 +93,12 @@ public class UsersControllerMockTest {
         list.add(new UserLdap("test.import1", "IMPORT1", "test", "123456", "B2", "test.import1@test.fr", "ROLE_USER"));
         list.add(new UserLdap("test.import2", "IMPORT2", "test", "123456", "B3", "test.import2@test.fr", "ROLE_USER"));
         list.add(new UserLdap("test.import3", "IMPORT3", "test", "123456", "B2", "test.import3@test.fr", "ROLE_USER"));
+        String json = mapper.writeValueAsString(list);
+
         // @RequestBody List<UserLdap> usersDetails
         this.mockMvc.perform(
                     post("/api/users/imports")
-                            .content(mapper.writeValueAsString(list))
+                            .content(json)
                             .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -116,16 +116,21 @@ public class UsersControllerMockTest {
                 .willReturn(this.ldapManager);
 
         OptionsChangeBTS optionsChangeBTS = new OptionsChangeBTS();
-        optionsChangeBTS.setLogins(new ArrayList<String>(Arrays.asList("test.bts1", "test.bts2", "test.bts3")));
+        optionsChangeBTS.setLogins(new ArrayList<String>(Arrays.asList("test.bts1", "test.bts2")));
         optionsChangeBTS.setBts(true);
-        optionsChangeBTS.setBtsparcours("SLAM");
+        optionsChangeBTS.setBtsparcours("SISR");
+        String json = mapper.writeValueAsString(optionsChangeBTS);
+
         // @RequestBody OptionsChangeBTS optionsChangeBTS
-        this.mockMvc.perform(get("/api/changebts"))
+        this.mockMvc.perform(
+                put("/api/users/changebts")
+                        .content(json)
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
                 .andExpect(status().isOk())
                 .andDo(print())
-                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].status", greaterThan(0)))
-                .andExpect(jsonPath("$[1].status", greaterThan(0)))
-                .andExpect(jsonPath("$[2].status", greaterThan(0)));
+                .andExpect(jsonPath("$[1].status", greaterThan(0)));
     }
 }
