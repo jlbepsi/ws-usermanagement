@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="DEBUG">
+    <Appenders>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="%highlight[%-5level] %d{HH:mm:ss.SSS}  - %msg%n"/>
+        </Console>
+
+        <File name="LogToFile" fileName="logs/app.log">
+            <PatternLayout>
+                <Pattern>[%p] %d %C{1.}- %m%n</Pattern>
+            </PatternLayout>
+        </File>
+
+        <File name="LogToFileMQ" fileName="logs/amqp.log">
+            <PatternLayout>
+                <Pattern>[%p] %d - %m%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="WSUserManagement" level="debug" additivity="false">
+            <AppenderRef ref="LogToFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Logger name="MQSender" level="warn" additivity="false">
+            <AppenderRef ref="LogToFileMQ"/>
+        </Logger>
+        <Root level="error">
+            <AppenderRef ref="LogToFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Root>
+    </Loggers>
+</Configuration>
