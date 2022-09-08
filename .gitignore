@@ -1,0 +1,13 @@
+/.gradle/
+/.idea/
+/build/
+/docs/
+/gradle/
+/libs/
+/logs/
+/out/
+/ssl
+/docker/image/target
+/docker/image/buildAndDeploy*.sh
+/docker/image/deployOVH.sh
+/docker/service/
